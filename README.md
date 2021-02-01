@@ -1,2 +1,2 @@
 # pdf-server
-python server for creating OPS pdf's from backend data
+python server for creating OPS pdfs from backend data
