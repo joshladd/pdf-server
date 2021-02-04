@@ -10,6 +10,8 @@ import re
 import pypdftk
 import base64
 import shutil
+from flask import make_response
+from flask import send_file, current_app as app
 
 app = Flask(__name__)
 
@@ -41,7 +43,7 @@ def get_display_text(field_object):
     # return str(field_object["numValue"])  
     # for field in data:
     if field_object["valueType"] == 0:
-        display_text = field_object["numValue"]
+        display_text = field_object["value"]
         return display_text 
     elif field_object["valueType"] == 1:
         display_text = str(int(display_text))
@@ -63,9 +65,6 @@ def get_display_text(field_object):
 
 
 def generate_pdf_data(data):
-
-
-
     # return str(x)
 
     pdf_data = {}
@@ -111,7 +110,35 @@ def generate_ops():
 
 
     for key in data:
+        
+            #set DSUID to "
+        
         pdf_data = generate_pdf_data(data[key])
+
+        if key == "Summary":
+            pdf_data["DSUID"] = ""
+
+        deal_source = pdf_data.get("DealSource")
+        seller = pdf_data.get("Seller")
+        status = pdf_data.get("Status")
+        date = pdf_data.get("Date")
+
+
+        if deal_source == None:
+            pdf_data["DealSource"] = "No Data Provided"
+        if seller == None:
+            pdf_data["Seller"] = "No Data Provided"
+        if date == None:
+            pdf_data["Date"] = "N/A"
+        if status == None: 
+            pdf_data["Status"] = "No Data Provided"
+   
+        
+        
+  
+        #if DealSource not in pdf_data, then add it with "No Data Provided" as the value
+        
+
         output_objects.append(pdf_data)
         rendered = template(pdf_data)
         pdf_name = "output" + key + ".pdf"
@@ -161,8 +188,22 @@ def generate_ops():
     with open("./output.txt","w") as f:
         json.dump(output_objects,f,indent=2)
 
-    
     return flask.jsonify({"message":"hi"})
+
+# @app.route('/OPM') #the url you'll send the user to when he wants the pdf
+# def pdfviewer():
+#     return flask.send_file("./output/outputMerged.pdf", attachment_filename="outputMerged.pdf")
+
+@app.route('/Show/')
+def show_static_pdf():
+    # with open('./outputMerged.pdf', 'rb') as static_file:
+    return send_file("./outputMerged.pdf", attachment_filename='outputMerged.pdf')
+
+
+        # return flask.jsonify({"message":"hi"})
+
+
+
 
     # print(form)
     # with open("./output/output.pdf", "rb") as f:
